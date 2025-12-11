@@ -3,7 +3,6 @@ import React, { useEffect, useRef } from "react";
 const OutputDisplay = ({ output }) => {
   const outputEndRef = useRef(null);
 
-  // Auto-scroll to bottom when new output is added
   useEffect(() => {
     outputEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [output]);

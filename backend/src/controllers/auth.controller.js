@@ -8,14 +8,10 @@ const {
   sanitizeInput
 } = require('../utils/validation');
 
-/**
- * Register a new user
- */
 const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // 1. Validate required fields
     if (!username || !email || !password) {
       return res.status(400).json({
         error: 'Missing required fields',
@@ -23,25 +19,21 @@ const register = async (req, res) => {
       });
     }
 
-    // 2. Sanitize inputs
     const sanitizedUsername = sanitizeInput(username);
     const sanitizedEmail = sanitizeInput(email).toLowerCase();
 
-    // 3. Validate email format
     if (!validateEmail(sanitizedEmail)) {
       return res.status(400).json({
         error: 'Invalid email format'
       });
     }
 
-    // 4. Validate username format
     if (!validateUsername(sanitizedUsername)) {
       return res.status(400).json({
         error: 'Invalid username format. Use 3-50 alphanumeric characters, underscores, or dashes only'
       });
     }
 
-    // 5. Validate password strength
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
       return res.status(400).json({
@@ -49,7 +41,6 @@ const register = async (req, res) => {
       });
     }
 
-    // 6. Check if username or email already exists
     const checkQuery = `
       SELECT id FROM users 
       WHERE username = $1 OR email = $2
@@ -62,11 +53,9 @@ const register = async (req, res) => {
       });
     }
 
-    // 7. Hash password
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // 8. Insert new user
     const insertQuery = `
       INSERT INTO users (username, email, password_hash, public_profile, private_data)
       VALUES ($1, $2, $3, $4, $5)
@@ -86,7 +75,6 @@ const register = async (req, res) => {
 
     const newUser = result.rows[0];
 
-    // 9. Generate JWT token
     const token = jwt.sign(
       {
         userId: newUser.id,
@@ -96,7 +84,6 @@ const register = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
-    // 10. Return success response
     res.status(201).json({
       message: 'User registered successfully',
       user: {
@@ -116,14 +103,10 @@ const register = async (req, res) => {
   }
 };
 
-/**
- * Login an existing user
- */
 const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // 1. Validate required fields
     if (!username || !password) {
       return res.status(400).json({
         error: 'Missing required fields',
@@ -131,10 +114,8 @@ const login = async (req, res) => {
       });
     }
 
-    // 2. Sanitize input
     const sanitizedUsername = sanitizeInput(username);
 
-    // 3. Find user by username
     const query = `
       SELECT id, username, email, password_hash, created_at
       FROM users
@@ -151,7 +132,6 @@ const login = async (req, res) => {
 
     const user = result.rows[0];
 
-    // 4. Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isPasswordValid) {
@@ -160,7 +140,6 @@ const login = async (req, res) => {
       });
     }
 
-    // 5. Generate JWT token
     const token = jwt.sign(
       {
         userId: user.id,
@@ -170,7 +149,6 @@ const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
-    // 6. Return success response
     res.status(200).json({
       message: 'Login successful',
       user: {
@@ -190,12 +168,8 @@ const login = async (req, res) => {
   }
 };
 
-/**
- * Get current user profile (protected route)
- */
 const getProfile = async (req, res) => {
   try {
-    // req.user is attached by authenticateToken middleware
     const { userId } = req.user;
 
     const query = `

@@ -1,14 +1,10 @@
 const pool = require('../config/database');
 
-/**
- * Create a new post
- */
 const createPost = async (req, res) => {
   try {
     const { content } = req.body;
-    const { userId } = req.user; // From auth middleware
+    const { userId } = req.user;
 
-    // Validate content
     if (!content || !content.trim()) {
       return res.status(400).json({
         error: 'Post content is required'
@@ -21,7 +17,6 @@ const createPost = async (req, res) => {
       });
     }
 
-    // Insert post
     const query = `
       INSERT INTO posts (user_id, content)
       VALUES ($1, $2)
@@ -49,22 +44,17 @@ const createPost = async (req, res) => {
   }
 };
 
-/**
- * Get feed (all posts with pagination)
- */
 const getFeed = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
     const offset = parseInt(req.query.offset) || 0;
 
-    // Validate pagination params
     if (limit < 1 || limit > 100) {
       return res.status(400).json({
         error: 'Limit must be between 1 and 100'
       });
     }
 
-    // Get posts from view (includes user data)
     const query = `
       SELECT 
         id,
@@ -79,7 +69,6 @@ const getFeed = async (req, res) => {
 
     const result = await pool.query(query, [limit, offset]);
 
-    // Get total count for pagination info
     const countQuery = 'SELECT COUNT(*) FROM posts';
     const countResult = await pool.query(countQuery);
     const totalPosts = parseInt(countResult.rows[0].count);
@@ -110,9 +99,6 @@ const getFeed = async (req, res) => {
   }
 };
 
-/**
- * Get a single post by ID
- */
 const getPost = async (req, res) => {
   try {
     const { id } = req.params;
@@ -158,15 +144,11 @@ const getPost = async (req, res) => {
   }
 };
 
-/**
- * Delete a post (only by author)
- */
 const deletePost = async (req, res) => {
   try {
     const { id } = req.params;
     const { userId } = req.user;
 
-    // Check if post exists and belongs to user
     const checkQuery = 'SELECT user_id FROM posts WHERE id = $1';
     const checkResult = await pool.query(checkQuery, [id]);
 
@@ -182,7 +164,6 @@ const deletePost = async (req, res) => {
       });
     }
 
-    // Delete the post
     const deleteQuery = 'DELETE FROM posts WHERE id = $1';
     await pool.query(deleteQuery, [id]);
 

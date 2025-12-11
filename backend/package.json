@@ -1,7 +1,7 @@
 {
-  "name": "social-terminal-backend",
+  "name": "cyber-bloodline-backend",
   "version": "1.0.0",
-  "description": "Backend API for Social Terminal",
+  "description": "Backend API for Cyber Bloodline",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

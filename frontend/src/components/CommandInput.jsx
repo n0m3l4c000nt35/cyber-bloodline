@@ -6,7 +6,6 @@ const CommandInput = ({ onCommand, username }) => {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const inputRef = useRef(null);
 
-  // Focus input on mount and when clicking anywhere
   useEffect(() => {
     inputRef.current?.focus();
 
@@ -22,20 +21,16 @@ const CommandInput = ({ onCommand, username }) => {
     e.preventDefault();
 
     if (input.trim()) {
-      // Add to history
       setHistory(prev => [...prev, input]);
       setHistoryIndex(-1);
 
-      // Execute command
       onCommand(input);
 
-      // Clear input
       setInput("");
     }
   };
 
   const handleKeyDown = e => {
-    // Arrow up - previous command
     if (e.key === "ArrowUp") {
       e.preventDefault();
       if (history.length > 0) {
@@ -48,7 +43,6 @@ const CommandInput = ({ onCommand, username }) => {
       }
     }
 
-    // Arrow down - next command
     if (e.key === "ArrowDown") {
       e.preventDefault();
       if (historyIndex !== -1) {
@@ -63,16 +57,14 @@ const CommandInput = ({ onCommand, username }) => {
       }
     }
 
-    // Tab - autocomplete (future feature)
     if (e.key === "Tab") {
       e.preventDefault();
-      // TODO: Implement autocomplete
     }
   };
 
   const promptText = username
-    ? `${username}@social-terminal:~$`
-    : "guest@social-terminal:~$";
+    ? `${username}@cyber-bloodline:~$`
+    : "guest@cyber-bloodline:~$";
 
   return (
     <form onSubmit={handleSubmit} className="terminal-input-container">

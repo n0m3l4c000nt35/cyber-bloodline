@@ -6,7 +6,6 @@ import { authAPI, postsAPI, followsAPI, usersAPI } from "../services/api";
 import { saveAuth, getAuth, clearAuth } from "../utils/authStorage";
 
 const Terminal = () => {
-  // Initialize state directly from localStorage - no effect needed
   const getInitialUser = () => {
     const { user: savedUser } = getAuth();
     return savedUser;
@@ -25,7 +24,7 @@ const Terminal = () => {
         type: "info",
       },
       {
-        content: "    SOCIAL TERMINAL - Decentralized Social Network",
+        content: "    CYBER BLOODLINE",
         type: "info",
       },
       {
@@ -269,7 +268,6 @@ const Terminal = () => {
       return;
     }
 
-    // Get content from args - join all args as the message
     const content = args.join(" ");
 
     if (!content || !content.trim()) {
@@ -403,7 +401,6 @@ const Terminal = () => {
       return;
     }
 
-    // Remove @ if user included it
     const cleanUsername = username.startsWith("@")
       ? username.slice(1)
       : username;
@@ -434,7 +431,6 @@ const Terminal = () => {
       return;
     }
 
-    // Remove @ if user included it
     const cleanUsername = username.startsWith("@")
       ? username.slice(1)
       : username;
@@ -682,7 +678,6 @@ const Terminal = () => {
       return;
     }
 
-    // Remove @ if user included it
     const cleanUsername = username.startsWith("@")
       ? username.slice(1)
       : username;
@@ -747,7 +742,6 @@ const Terminal = () => {
       return;
     }
 
-    // Remove @ if user included it
     const cleanUsername = username.startsWith("@")
       ? username.slice(1)
       : username;
@@ -901,7 +895,7 @@ const Terminal = () => {
   return (
     <div className="terminal-container">
       <div className="terminal-header">
-        <div className="terminal-title">SOCIAL TERMINAL v1.0</div>
+        <div className="terminal-title">CYBER BLOODLINE v1.0</div>
         <div className="terminal-info">
           {user ? `Logged in as: ${user.username}` : "Not authenticated"}
         </div>

@@ -1,8 +1,5 @@
 const pool = require('../config/database');
 
-/**
- * Search users by username (partial match)
- */
 const searchUsers = async (req, res) => {
   try {
     const { query } = req.query;
@@ -57,15 +54,11 @@ const searchUsers = async (req, res) => {
   }
 };
 
-/**
- * Get a user's public profile by username
- */
 const getUserProfile = async (req, res) => {
   try {
     const { username } = req.params;
-    const currentUserId = req.user?.userId; // Optional - may not be logged in
+    const currentUserId = req.user?.userId;
 
-    // Get user info with stats
     const userQuery = `
       SELECT 
         u.id,
@@ -93,7 +86,6 @@ const getUserProfile = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // Check if current user follows this user (if logged in)
     let isFollowing = false;
     if (currentUserId) {
       const followQuery = `
@@ -127,9 +119,6 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-/**
- * Get a user's posts by username
- */
 const getUserPosts = async (req, res) => {
   try {
     const { username } = req.params;
@@ -142,7 +131,6 @@ const getUserPosts = async (req, res) => {
       });
     }
 
-    // Check if user exists
     const userQuery = 'SELECT id, username FROM users WHERE username = $1';
     const userResult = await pool.query(userQuery, [username]);
 
@@ -154,7 +142,6 @@ const getUserPosts = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // Get user's posts
     const postsQuery = `
       SELECT 
         id,
@@ -168,7 +155,6 @@ const getUserPosts = async (req, res) => {
 
     const postsResult = await pool.query(postsQuery, [user.id, limit, offset]);
 
-    // Get total count
     const countQuery = 'SELECT COUNT(*) FROM posts WHERE user_id = $1';
     const countResult = await pool.query(countQuery, [user.id]);
     const totalPosts = parseInt(countResult.rows[0].count);
@@ -199,9 +185,6 @@ const getUserPosts = async (req, res) => {
   }
 };
 
-/**
- * Get list of all users (for discovery)
- */
 const getAllUsers = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
@@ -231,7 +214,6 @@ const getAllUsers = async (req, res) => {
 
     const result = await pool.query(query, [limit, offset]);
 
-    // Get total count
     const countQuery = 'SELECT COUNT(*) FROM users';
     const countResult = await pool.query(countQuery);
     const totalUsers = parseInt(countResult.rows[0].count);

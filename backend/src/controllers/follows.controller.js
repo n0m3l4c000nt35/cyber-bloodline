@@ -1,14 +1,10 @@
 const pool = require('../config/database');
 
-/**
- * Follow a user
- */
 const followUser = async (req, res) => {
   try {
     const { username } = req.params;
-    const { userId } = req.user; // Current logged-in user
+    const { userId } = req.user;
 
-    // Get the user to follow
     const userQuery = 'SELECT id, username FROM users WHERE username = $1';
     const userResult = await pool.query(userQuery, [username]);
 
@@ -20,14 +16,12 @@ const followUser = async (req, res) => {
 
     const followingId = userResult.rows[0].id;
 
-    // Check if trying to follow yourself
     if (followingId === userId) {
       return res.status(400).json({
         error: 'You cannot follow yourself'
       });
     }
 
-    // Check if already following
     const checkQuery = `
       SELECT * FROM follows 
       WHERE follower_id = $1 AND following_id = $2
@@ -40,7 +34,6 @@ const followUser = async (req, res) => {
       });
     }
 
-    // Create follow relationship
     const insertQuery = `
       INSERT INTO follows (follower_id, following_id)
       VALUES ($1, $2)
@@ -64,15 +57,11 @@ const followUser = async (req, res) => {
   }
 };
 
-/**
- * Unfollow a user
- */
 const unfollowUser = async (req, res) => {
   try {
     const { username } = req.params;
     const { userId } = req.user;
 
-    // Get the user to unfollow
     const userQuery = 'SELECT id FROM users WHERE username = $1';
     const userResult = await pool.query(userQuery, [username]);
 
@@ -84,7 +73,6 @@ const unfollowUser = async (req, res) => {
 
     const followingId = userResult.rows[0].id;
 
-    // Check if actually following
     const checkQuery = `
       SELECT * FROM follows 
       WHERE follower_id = $1 AND following_id = $2
@@ -97,7 +85,6 @@ const unfollowUser = async (req, res) => {
       });
     }
 
-    // Delete follow relationship
     const deleteQuery = `
       DELETE FROM follows 
       WHERE follower_id = $1 AND following_id = $2
@@ -116,9 +103,6 @@ const unfollowUser = async (req, res) => {
   }
 };
 
-/**
- * Get list of users that current user is following
- */
 const getFollowing = async (req, res) => {
   try {
     const { userId } = req.user;
@@ -155,9 +139,6 @@ const getFollowing = async (req, res) => {
   }
 };
 
-/**
- * Get list of users following the current user
- */
 const getFollowers = async (req, res) => {
   try {
     const { userId } = req.user;
@@ -194,9 +175,6 @@ const getFollowers = async (req, res) => {
   }
 };
 
-/**
- * Get personalized feed (posts from followed users only)
- */
 const getFollowingFeed = async (req, res) => {
   try {
     const { userId } = req.user;
@@ -209,7 +187,6 @@ const getFollowingFeed = async (req, res) => {
       });
     }
 
-    // Get posts only from users that current user follows
     const query = `
       SELECT 
         p.id,
@@ -230,7 +207,6 @@ const getFollowingFeed = async (req, res) => {
 
     const result = await pool.query(query, [userId, limit, offset]);
 
-    // Get total count of posts from followed users
     const countQuery = `
       SELECT COUNT(*) 
       FROM posts 
@@ -269,15 +245,11 @@ const getFollowingFeed = async (req, res) => {
   }
 };
 
-/**
- * Check if current user follows another user
- */
 const checkFollowing = async (req, res) => {
   try {
     const { username } = req.params;
     const { userId } = req.user;
 
-    // Get the target user
     const userQuery = 'SELECT id FROM users WHERE username = $1';
     const userResult = await pool.query(userQuery, [username]);
 
@@ -289,7 +261,6 @@ const checkFollowing = async (req, res) => {
 
     const targetUserId = userResult.rows[0].id;
 
-    // Check if following
     const checkQuery = `
       SELECT * FROM follows 
       WHERE follower_id = $1 AND following_id = $2

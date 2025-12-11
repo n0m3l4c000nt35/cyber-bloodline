@@ -1,7 +1,3 @@
-/**
- * Parse terminal commands
- */
-
 export const parseCommand = (input) => {
   const trimmed = input.trim();
 
@@ -9,7 +5,6 @@ export const parseCommand = (input) => {
     return { command: null, args: [], flags: {} };
   }
 
-  // Split by spaces but preserve quoted strings
   const parts = trimmed.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
 
   const command = parts[0]?.toLowerCase();
@@ -19,24 +14,21 @@ export const parseCommand = (input) => {
   for (let i = 1; i < parts.length; i++) {
     const part = parts[i];
 
-    // Check if it's a flag (--flag or --flag=value)
     if (part.startsWith('--')) {
       const flagPart = part.substring(2);
       const [key, value] = flagPart.split('=');
 
       if (value) {
-        flags[key] = value.replace(/^"|"$/g, ''); // Remove quotes
+        flags[key] = value.replace(/^"|"$/g, '');
       } else {
-        // Check if next part is the value
         if (i + 1 < parts.length && !parts[i + 1].startsWith('--')) {
           flags[key] = parts[i + 1].replace(/^"|"$/g, '');
-          i++; // Skip next part
+          i++;
         } else {
           flags[key] = true;
         }
       }
     } else {
-      // Regular argument
       args.push(part.replace(/^"|"$/g, ''));
     }
   }
@@ -44,7 +36,6 @@ export const parseCommand = (input) => {
   return { command, args, flags };
 };
 
-// Available commands
 export const COMMANDS = {
   HELP: 'help',
   CLEAR: 'clear',
@@ -67,7 +58,6 @@ export const COMMANDS = {
   USERS: 'users',
 };
 
-// Command descriptions for help
 export const COMMAND_HELP = {
   [COMMANDS.HELP]: 'Show available commands',
   [COMMANDS.CLEAR]: 'Clear terminal screen',

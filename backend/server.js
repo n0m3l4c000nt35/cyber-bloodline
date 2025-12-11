@@ -5,7 +5,6 @@ const pool = require('./src/config/database');
 
 const PORT = process.env.PORT || 3000;
 
-// Create HTTP server
 const server = http.createServer(app);
 
 server.listen(PORT, () => {
@@ -13,7 +12,6 @@ server.listen(PORT, () => {
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// Graceful shutdown
 const shutdown = async () => {
   console.log('\n⏳ Shutting down gracefully...');
 

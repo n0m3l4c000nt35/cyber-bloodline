@@ -1,7 +1,3 @@
-/**
- * Utility functions for managing authentication storage
- */
-
 export const saveAuth = (token, user) => {
   localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));
