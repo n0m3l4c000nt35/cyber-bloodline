@@ -9,6 +9,8 @@ const usersRoutes = require('./routes/users.routes');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
@@ -22,14 +24,21 @@ app.use(cors({
     // Allow requests with no origin (mobile apps, Postman, curl, etc.)
     if (!origin) return callback(null, true);
 
-    // Allow if origin is in allowed list
-    if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-      callback(new Error('Not allowed by CORS'));
+    // In production, allow all Vercel domains (both production and preview URLs)
+    if (process.env.NODE_ENV === 'production') {
+      if (origin.endsWith('.vercel.app') || origin === process.env.FRONTEND_URL) {
+        return callback(null, true);
+      }
     }
+
+    // In development, check allowed origins
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+      return callback(null, true);
+    }
+
+    console.log('CORS blocked origin:', origin);
+    console.log('Allowed origins:', allowedOrigins);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true
 }));
