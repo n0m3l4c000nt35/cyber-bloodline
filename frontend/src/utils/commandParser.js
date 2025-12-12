@@ -56,6 +56,10 @@ export const COMMANDS = {
   VIEW_USER: 'view-user',
   USER_POSTS: 'user-posts',
   USERS: 'users',
+  COMMENT: 'comment',
+  COMMENTS: 'comments',
+  DELETE_COMMENT: 'delete-comment',
+  THEME: 'theme',
 };
 
 export const COMMAND_HELP = {
@@ -78,4 +82,8 @@ export const COMMAND_HELP = {
   [COMMANDS.VIEW_USER]: 'View user profile: view-user <username>',
   [COMMANDS.USER_POSTS]: 'View user posts: user-posts <username> [--limit 20] [--offset 0]',
   [COMMANDS.USERS]: 'List all users: users [--limit 20] [--offset 0]',
+  [COMMANDS.COMMENT]: 'Comment on a post: comment <post-id> "Your comment"',
+  [COMMANDS.COMMENTS]: 'View post comments: comments <post-id> [--limit 50] [--offset 0]',
+  [COMMANDS.DELETE_COMMENT]: 'Delete your comment: delete-comment <comment-id>',
+  [COMMANDS.THEME]: 'Change theme: theme [terminal|htb|github] (omit to cycle)',
 };

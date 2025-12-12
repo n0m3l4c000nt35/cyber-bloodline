@@ -1,9 +1,23 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import OutputDisplay from "./OutputDisplay";
 import CommandInput from "./CommandInput";
 import { parseCommand, COMMANDS, COMMAND_HELP } from "../utils/commandParser";
-import { authAPI, postsAPI, followsAPI, usersAPI } from "../services/api";
+import {
+  authAPI,
+  postsAPI,
+  followsAPI,
+  usersAPI,
+  commentsAPI,
+} from "../services/api";
 import { saveAuth, getAuth, clearAuth } from "../utils/authStorage";
+import {
+  getCurrentTheme,
+  setTheme,
+  initTheme,
+  getNextTheme,
+  THEMES,
+  THEME_NAMES,
+} from "../utils/theme";
 
 const Terminal = () => {
   const getInitialUser = () => {
@@ -41,6 +55,10 @@ const Terminal = () => {
 
   const [output, setOutput] = useState(getInitialOutput);
   const [user, setUser] = useState(getInitialUser);
+
+  useEffect(() => {
+    initTheme();
+  }, []);
 
   const addOutput = useCallback((content, type = "response") => {
     setOutput(prev => [...prev, { content, type }]);
@@ -129,6 +147,22 @@ const Terminal = () => {
 
         case COMMANDS.USERS:
           await handleUsers(flags);
+          break;
+
+        case COMMANDS.COMMENT:
+          await handleComment(args);
+          break;
+
+        case COMMANDS.COMMENTS:
+          await handleComments(args, flags);
+          break;
+
+        case COMMANDS.DELETE_COMMENT:
+          await handleDeleteComment(args);
+          break;
+
+        case COMMANDS.THEME:
+          handleTheme(args);
           break;
 
         default:
@@ -325,12 +359,16 @@ const Terminal = () => {
 
         posts.forEach((post, index) => {
           const date = new Date(post.createdAt).toLocaleString();
+          const commentText = post.commentCount === 1 ? "comment" : "comments";
           addOutput(
             `[${offset + index + 1}] @${post.author.username} · ${date}`,
             "info"
           );
           addOutput(`    ${post.content}`, "response");
-          addOutput(`    ID: ${post.id}`, "info");
+          addOutput(
+            `    ID: ${post.id} | ${post.commentCount || 0} ${commentText}`,
+            "info"
+          );
           addOutput("", "response");
         });
 
@@ -579,12 +617,16 @@ const Terminal = () => {
 
         posts.forEach((post, index) => {
           const date = new Date(post.createdAt).toLocaleString();
+          const commentText = post.commentCount === 1 ? "comment" : "comments";
           addOutput(
             `[${offset + index + 1}] @${post.author.username} · ${date}`,
             "info"
           );
           addOutput(`    ${post.content}`, "response");
-          addOutput(`    ID: ${post.id}`, "info");
+          addOutput(
+            `    ID: ${post.id} | ${post.commentCount || 0} ${commentText}`,
+            "info"
+          );
           addOutput("", "response");
         });
 
@@ -890,6 +932,186 @@ const Terminal = () => {
       const message = error.response?.data?.error || "Failed to load users";
       addOutput(`✗ ${message}`, "error");
     }
+  };
+
+  const handleComment = async args => {
+    if (!user) {
+      addOutput("You must be logged in to comment", "error");
+      return;
+    }
+
+    const postId = args[0];
+    const content = args.slice(1).join(" ");
+
+    if (!postId || !content) {
+      addOutput('Usage: comment <post-id> "Your comment here"', "error");
+      return;
+    }
+
+    if (content.length > 500) {
+      addOutput("Comment must be 500 characters or less", "error");
+      return;
+    }
+
+    addOutput("Creating comment...", "info");
+
+    try {
+      const response = await commentsAPI.createComment(postId, content);
+      addOutput("", "response");
+      addOutput("✓ Comment added successfully!", "success");
+      addOutput(`  Comment ID: ${response.data.comment.id}`, "info");
+      addOutput("", "response");
+      addOutput("Use: comments " + postId + " to view all comments", "info");
+      addOutput("", "response");
+    } catch (error) {
+      const message = error.response?.data?.error || "Failed to create comment";
+      addOutput(`✗ ${message}`, "error");
+    }
+  };
+
+  const handleComments = async (args, flags) => {
+    const postId = args[0];
+
+    if (!postId) {
+      addOutput("Usage: comments <post-id> [--limit 50] [--offset 0]", "error");
+      return;
+    }
+
+    const limit = parseInt(flags.limit) || 50;
+    const offset = parseInt(flags.offset) || 0;
+
+    if (limit < 1 || limit > 100) {
+      addOutput("Limit must be between 1 and 100", "error");
+      return;
+    }
+
+    addOutput("Loading comments...", "info");
+
+    try {
+      const response = await commentsAPI.getPostComments(postId, limit, offset);
+      const { comments: commentsList, pagination } = response.data;
+
+      addOutput("", "response");
+
+      if (commentsList.length === 0) {
+        if (offset === 0) {
+          addOutput("No comments yet", "info");
+          addOutput("Be the first to comment!", "info");
+          addOutput(`Use: comment ${postId} "Your comment"`, "info");
+        } else {
+          addOutput("No more comments", "info");
+        }
+      } else {
+        addOutput(
+          `═══════════════════ COMMENTS (${pagination.total}) ═══════════════════`,
+          "info"
+        );
+        addOutput("", "response");
+
+        commentsList.forEach((comment, index) => {
+          const date = new Date(comment.createdAt).toLocaleString();
+          addOutput(
+            `[${offset + index + 1}] @${comment.author.username} · ${date}`,
+            "info"
+          );
+          addOutput(`    ${comment.content}`, "response");
+          addOutput(`    Comment ID: ${comment.id}`, "info");
+          addOutput("", "response");
+        });
+
+        addOutput(
+          "─────────────────────────────────────────────────────────────",
+          "info"
+        );
+
+        if (pagination.hasMore) {
+          addOutput(
+            `Showing ${offset + 1}-${offset + commentsList.length} of ${
+              pagination.total
+            }`,
+            "info"
+          );
+          addOutput(
+            `Use: comments ${postId} --limit ${limit} --offset ${
+              offset + limit
+            } for more`,
+            "info"
+          );
+        } else {
+          addOutput("End of comments", "info");
+        }
+      }
+
+      addOutput("", "response");
+    } catch (error) {
+      const message = error.response?.data?.error || "Failed to load comments";
+      addOutput(`✗ ${message}`, "error");
+    }
+  };
+
+  const handleDeleteComment = async args => {
+    if (!user) {
+      addOutput("You must be logged in to delete comments", "error");
+      return;
+    }
+
+    const commentId = args[0];
+
+    if (!commentId) {
+      addOutput("Usage: delete-comment <comment-id>", "error");
+      return;
+    }
+
+    addOutput(`Deleting comment ${commentId}...`, "info");
+
+    try {
+      await commentsAPI.deleteComment(commentId);
+      addOutput("", "response");
+      addOutput("✓ Comment deleted successfully!", "success");
+      addOutput("", "response");
+    } catch (error) {
+      const message = error.response?.data?.error || "Failed to delete comment";
+      addOutput(`✗ ${message}`, "error");
+    }
+  };
+
+  const handleTheme = args => {
+    const requestedTheme = args[0]?.toLowerCase();
+
+    // If no theme specified, cycle to next theme
+    if (!requestedTheme) {
+      const currentTheme = getCurrentTheme();
+      const nextTheme = getNextTheme(currentTheme);
+      setTheme(nextTheme);
+
+      addOutput("", "response");
+      addOutput(`✓ Theme changed to: ${THEME_NAMES[nextTheme]}`, "success");
+      addOutput(
+        "Use: theme [terminal|htb|github] to set a specific theme",
+        "info"
+      );
+      addOutput("", "response");
+      return;
+    }
+
+    // Validate and set specific theme
+    if (!Object.values(THEMES).includes(requestedTheme)) {
+      addOutput("Invalid theme. Available themes:", "error");
+      addOutput("  • terminal - Classic green terminal", "info");
+      addOutput("  • htb - Hack The Box style", "info");
+      addOutput("  • github - GitHub Dark theme", "info");
+      addOutput("", "response");
+      addOutput(
+        "Use: theme (without arguments) to cycle through themes",
+        "info"
+      );
+      return;
+    }
+
+    setTheme(requestedTheme);
+    addOutput("", "response");
+    addOutput(`✓ Theme changed to: ${THEME_NAMES[requestedTheme]}`, "success");
+    addOutput("", "response");
   };
 
   return (

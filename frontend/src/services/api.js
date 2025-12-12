@@ -92,4 +92,18 @@ export const usersAPI = {
     api.get('/users/list', { params: { limit, offset } }),
 };
 
+export const commentsAPI = {
+  createComment: (postId, content) =>
+    api.post(`/comments/post/${postId}`, { content }),
+
+  getPostComments: (postId, limit = 50, offset = 0) =>
+    api.get(`/comments/post/${postId}`, { params: { limit, offset } }),
+
+  getComment: (id) =>
+    api.get(`/comments/${id}`),
+
+  deleteComment: (id) =>
+    api.delete(`/comments/${id}`),
+};
+
 export default api;

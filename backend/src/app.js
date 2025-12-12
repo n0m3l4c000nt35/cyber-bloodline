@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth.routes');
 const postsRoutes = require('./routes/posts.routes');
 const followsRoutes = require('./routes/follows.routes');
 const usersRoutes = require('./routes/users.routes');
+const commentsRoutes = require('./routes/comments.routes');
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/follows', followsRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/comments', commentsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

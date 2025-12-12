@@ -57,13 +57,17 @@ const getFeed = async (req, res) => {
 
     const query = `
       SELECT 
-        id,
-        content,
-        created_at,
-        user_id,
-        username
-      FROM posts_with_users
-      ORDER BY created_at DESC
+        p.id,
+        p.content,
+        p.created_at,
+        p.user_id,
+        u.username,
+        COALESCE(COUNT(c.id), 0) as comment_count
+      FROM posts p
+      JOIN users u ON p.user_id = u.id
+      LEFT JOIN comments c ON p.id = c.post_id
+      GROUP BY p.id, p.content, p.created_at, p.user_id, u.username
+      ORDER BY p.created_at DESC
       LIMIT $1 OFFSET $2
     `;
 
@@ -81,7 +85,8 @@ const getFeed = async (req, res) => {
         author: {
           userId: post.user_id,
           username: post.username
-        }
+        },
+        commentCount: parseInt(post.comment_count)
       })),
       pagination: {
         limit,
